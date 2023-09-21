@@ -28,8 +28,8 @@ def stockfish(board, depth): #stockfish evaluation
     
 
 board = random_board()
-print(board)
-print(stockfish(board, 20))
+#print(board)
+#print(stockfish(board, 20))
 
 #covert random into 3D matrix
 square_to_index = {
@@ -64,7 +64,7 @@ def split_dims(board):
         board3d[13][row][col] = 1
     
     board.turn = aux
-    print(board3d)
+    #print(board3d)
     return board3d
 
 split_dims(board)
@@ -82,3 +82,21 @@ def build_model(conv_size, conv_depth):
   return models.Model(inputs=board3d, outputs=x)
 
 model = build_model(32, 4)
+
+def get_dataset():
+    container = np.load('dataset.npz')
+    x = container['arr_0']
+    y = container['arr_1']
+    x_train = x[:int(len(x) * 0.9)]
+    y_train = y[:int(len(y) * 0.9)]
+    print(x.shape)
+    print(y.shape)
+
+    return x_train, y_train
+
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+x_train, y_train = get_dataset()
+checkpoint_filepath = '/tmp/checkpoint'
+model.fit(x_train, y_train, epochs=10, batch_size=32, validation_split=0.1)
+
+model.save('model.h5')
