@@ -3,6 +3,7 @@ import chess.engine
 import numpy as np
 import random
 import tensorflow as tf
+import chess.svg
 from keras.layers import Conv2D, Flatten, Dense
 from keras import models, layers, optimizers
 import keras.callbacks
@@ -100,3 +101,31 @@ checkpoint_filepath = '/tmp/checkpoint'
 model.fit(x_train, y_train, epochs=10, batch_size=32, validation_split=0.1)
 
 model.save('model.h5')
+
+model = models.load_model('model.h5')
+def eval_board(board):
+    x = split_dims(board)
+    x = np.expand_dims(x, axis=0)
+    return model.predict(x)[0][0]
+
+def play_game():
+    max_moves = None
+    max_eval = -np.inf
+
+    for move in board.legal_moves:
+        board.push(move)
+        e = eval_board(board)
+        if e > max_eval:
+            max_eval = e
+            max_moves = [move]
+        elif e == max_eval:
+            max_moves.append(move)
+        board.pop()
+
+        return random.choice(max_moves)
+    
+board = chess.Board()
+board.svg = chess.svg.board(board=board)
+with open('board.svg', 'w') as f:
+    f.write(board.svg)
+board.push(play_game())
